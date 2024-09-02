@@ -1,36 +1,90 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        continue-on-error: true
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          secrets: |
+              secret/data/ci/aws accessKey | AWS_ACCESS_KEY_ID ;
+              secret/data/ci/aws secretKey | AWS_SECRET_ACCESS_KEY ;    
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Import Secrets
+        id: import-secrets-2
+        uses: hashicorp/vault-action@v2
+        continue-on-error: true
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}   
+          secrets: |
+              /cubbyhole/foo foo ;
+              /cubbyhole/foo zip | MY_KEY ;              
+
+      - name: Import Secrets
+        id: import-secrets-3
+        uses: hashicorp/vault-action@v2
+        continue-on-error: true
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}   
+          secrets: |
+              /root_db/data/secret | ROOT_DB_SECRET ;
+
+      - name: Generate Database credentials with Vault using curl
+        id: db_creds
+        continue-on-error: true
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          echo "Fetching database credentials from Vault..."
+          response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
+            ${VAULT_ADDR}/v1/postgres/creds/readWrite)
+
+          echo "Parsing response..."
+          db_username=$(echo $response | jq -r .data.username)
+          db_password=$(echo $response | jq -r .data.password)
+
+          echo "Setting output variables..."
+          echo "::set-output name=db_username::$db_username"
+          echo "::set-output name=db_password::$db_password"
+
+      - name: Use Database credentials
+        continue-on-error: true
+        env:
+          DB_USERNAME: ${{ steps.db_creds.outputs.db_username }}
+          DB_PASSWORD: ${{ steps.db_creds.outputs.db_password }}
+        run: |
+          PGPASSWORD=$DB_PASSWORD psql -h <db_host> -U $DB_USERNAME -d <db_name> -c '\dt'          
+
+      - name: Run a multi-line script
+        continue-on-error: true
+        run: |
+          echo "==================================="  
+          echo "The secrets are:"
+          echo "AWS_ACCESS_KEY_ID = ${{ env.AWS_ACCESS_KEY_ID }}"
+          echo "AWS_SECRET_ACCESS_KEY = ${{ env.AWS_SECRET_ACCESS_KEY }}"
+          echo "==================================="
+          echo "The secrets are:"
+          echo "MY_KEY = ${{ env.MY_KEY }}"
+          echo "FOO = ${{ env.FOO }}"
+          echo "==================================="
+          echo "The secrets are:"
+          echo "ROOT_DB_SECRET = ${{ env.ROOT_DB_SECRET }}"
+          echo "==================================="       
+          echo "The secrets are:"
+          echo "DB_USERNAME = ${{ env.DB_USERNAME }}"
+          echo "DB_PASSWORD = ${{ env.DB_PASSWORD }}"
+          echo "==================================="   
