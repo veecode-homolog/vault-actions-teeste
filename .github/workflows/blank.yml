@@ -10,16 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Import Secrets
+        # USANDO JOB COM CURL
+      - name: Import AWS Secrets 
         id: import-secrets
-        # uses: hashicorp/vault-action@v2
-        # continue-on-error: true
-        # with:
-        #   url: ${{ secrets.VAULT_ADDR }}
-        #   token: ${{ secrets.VAULT_TOKEN }}
-        #   secrets: |
-        #       aws/data/ci/assumeRole accessKey | AWS_ACCESS_KEY_ID ;
-        #       aws/data/ci/assumeRole secretKey | AWS_SECRET_ACCESS_KEY ;    
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
@@ -33,35 +26,14 @@ jobs:
           aws_secret_key=$(echo $response | jq -r .data.secret_key)
           aws_session_token=$(echo $response | jq -r .data.security_token)
 
-          echo "aws_access_key = $aws_access_key"
-          echo "aws_secret_key = $aws_secret_key"
-          echo "aws_session_token = $aws_session_token"
-
-          echo "Setting output variables..."
-          echo "::set-output name=AWS_ACCESS_KEY_ID::$aws_access_key"
-          echo "::set-output name=AWS_SECRET_ACCESS_KEY::$aws_secret_key"
+          echo "Setting output and environment variables..."
+          echo "::set-output name=aws_access_key::$aws_access_key"
+          echo "::set-output name=aws_secret_key::$aws_secret_key"
           echo "::set-output name=aws_session_token::$aws_session_token"
 
-      - name: Import Secrets
-        id: import-secrets-2
-        uses: hashicorp/vault-action@v2
-        continue-on-error: true
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          token: ${{ secrets.VAULT_TOKEN }}   
-          secrets: |
-              /cubbyhole/foo foo ;
-              /cubbyhole/foo zip | MY_KEY ;              
-
-      - name: Import Secrets
-        id: import-secrets-3
-        uses: hashicorp/vault-action@v2
-        continue-on-error: true
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          token: ${{ secrets.VAULT_TOKEN }}   
-          secrets: |
-              /root_db/data/secret master | ROOT_DB_SECRET ;
+          echo "AWS_ACCESS_KEY_ID=$aws_access_key" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$aws_secret_key" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$aws_session_token" >> $GITHUB_ENV   
 
       - name: Generate Database credentials with Vault using curl
         id: db_creds
@@ -78,15 +50,24 @@ jobs:
           db_username=$(echo $response | jq -r .data.username)
           db_password=$(echo $response | jq -r .data.password)
 
-          echo "db_username = $db_username"
-          echo "db_password = $db_password"
-
           echo "Setting output variables..."
           echo "::set-output name=db_username::$db_username"
           echo "::set-output name=db_password::$db_password"
 
-          echo "DB_USERNAME=${{ steps.db_creds.outputs.db_username }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ steps.db_creds.outputs.db_password }}" >> $GITHUB_ENV          
+          echo "DB_USERNAME=$db_username" >> $GITHUB_ENV
+          echo "DB_PASSWORD=$db_password" >> $GITHUB_ENV
+
+
+        # IMPORTANDO COM ACTION DO VAULT
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        continue-on-error: true
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          token: ${{ secrets.VAULT_TOKEN }}   
+          secrets: |
+              /root_db/data/secret master | ROOT_DB_SECRET ;
 
       - name: Use Database credentials
         continue-on-error: true
@@ -103,10 +84,6 @@ jobs:
           echo "The secrets are:"
           echo "AWS_ACCESS_KEY_ID = ${{ env.AWS_ACCESS_KEY_ID }}"
           echo "AWS_SECRET_ACCESS_KEY = ${{ env.AWS_SECRET_ACCESS_KEY }}"
-          echo "==================================="
-          echo "The secrets are:"
-          echo "MY_KEY = ${{ env.MY_KEY }}"
-          echo "FOO = ${{ env.FOO }}"
           echo "==================================="
           echo "The secrets are:"
           echo "ROOT_DB_SECRET = ${{ env.ROOT_DB_SECRET }}"
