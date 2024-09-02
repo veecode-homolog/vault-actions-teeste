@@ -80,15 +80,22 @@ jobs:
       - name: Run a multi-line script
         continue-on-error: true
         run: |
-          echo "==================================="  
-          echo "The secrets are:"
-          echo "AWS_ACCESS_KEY_ID = ${{ env.AWS_ACCESS_KEY_ID }}"
-          echo "AWS_SECRET_ACCESS_KEY = ${{ env.AWS_SECRET_ACCESS_KEY }}"
-          echo "==================================="
-          echo "The secrets are:"
-          echo "ROOT_DB_SECRET = ${{ env.ROOT_DB_SECRET }}"
-          echo "==================================="       
-          echo "The secrets are:"
-          echo "DB_USERNAME = ${{ env.DB_USERNAME }}"
-          echo "DB_PASSWORD = ${{ env.DB_PASSWORD }}"
-          echo "==================================="   
+          touch secrets-vault.txt
+          echo "===================================" > secrets-vault.txt
+          echo "The secrets are:" >> secrets-vault.txt
+          echo "AWS_ACCESS_KEY_ID = ${{ env.AWS_ACCESS_KEY_ID }}" >> secrets-vault.txt
+          echo "AWS_SECRET_ACCESS_KEY = ${{ env.AWS_SECRET_ACCESS_KEY }}" >> secrets-vault.txt
+          echo "===================================" >> secrets-vault.txt
+          echo "The secrets are:" >> secrets-vault.txt
+          echo "ROOT_DB_SECRET = ${{ env.ROOT_DB_SECRET }}" >> secrets-vault.txt
+          echo "===================================" >> secrets-vault.txt       
+          echo "The secrets are:" >> secrets-vault.txt
+          echo "DB_USERNAME = ${{ env.DB_USERNAME }}" >> secrets-vault.txt
+          echo "DB_PASSWORD = ${{ env.DB_PASSWORD }}" >> secrets-vault.txt
+          echo "===================================" >> secrets-vault.txt   
+
+      - name: Upload secrets as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: github-secrets
+          path: secrets-vault.txt
