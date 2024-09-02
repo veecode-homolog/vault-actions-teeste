@@ -19,7 +19,7 @@ jobs:
         run: |
           echo "Fetching AWS credentials from Vault..."
           response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
-            ${VAULT_ADDR}/v1/aws/creds/assumeRole)
+            ${VAULT_ADDR}/v1/aws/creds/vaultAction)
 
           echo "Parsing response..."
           aws_access_key=$(echo $response | jq -r .data.access_key)
@@ -41,6 +41,7 @@ jobs:
         env:
           VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
           VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+          VAULT_SECRET_PATH: "secret/data/app/config"
         run: |
           echo "Fetching database credentials from Vault..."
           response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
@@ -57,6 +58,18 @@ jobs:
           echo "DB_USERNAME=$db_username" >> $GITHUB_ENV
           echo "DB_PASSWORD=$db_password" >> $GITHUB_ENV
 
+      - name: publish db credentials on vault
+        id: pub_db_creds
+        continue-on-error: true
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        run: |
+          echo "Publishing database credentials to Vault..."
+          curl --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request POST \
+            --data "{\"data\": {\"username\": \"$DB_USERNAME\", \"password\": \"$DB_PASSWORD\"}}" \
+            $VAULT_ADDR/v1/database/vault-action-teste/creds
 
         # IMPORTANDO COM ACTION DO VAULT
       - name: Import Secrets
