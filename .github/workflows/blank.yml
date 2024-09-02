@@ -33,6 +33,10 @@ jobs:
           aws_secret_key=$(echo $response | jq -r .data.secret_key)
           aws_session_token=$(echo $response | jq -r .data.security_token)
 
+          echo "aws_access_key = $aws_access_key"
+          echo "aws_secret_key = $aws_secret_key"
+          echo "aws_session_token = $aws_session_token"
+
           echo "Setting output variables..."
           echo "::set-output name=AWS_ACCESS_KEY_ID::$aws_access_key"
           echo "::set-output name=AWS_SECRET_ACCESS_KEY::$aws_secret_key"
@@ -73,6 +77,9 @@ jobs:
           echo "Parsing response..."
           db_username=$(echo $response | jq -r .data.username)
           db_password=$(echo $response | jq -r .data.password)
+
+          echo "db_username = $db_username"
+          echo "db_password = $db_password"
 
           echo "Setting output variables..."
           echo "::set-output name=db_username::$db_username"
