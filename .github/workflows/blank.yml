@@ -18,8 +18,8 @@ jobs:
           url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-              aws/data/ci/aws accessKey | AWS_ACCESS_KEY_ID ;
-              aws/data/ci/aws secretKey | AWS_SECRET_ACCESS_KEY ;    
+              secret/data/ci/aws accessKey | AWS_ACCESS_KEY_ID ;
+              secret/data/ci/aws secretKey | AWS_SECRET_ACCESS_KEY ;    
 
       - name: Import Secrets
         id: import-secrets-2
