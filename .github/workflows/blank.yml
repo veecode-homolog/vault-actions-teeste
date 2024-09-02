@@ -60,7 +60,7 @@ jobs:
 
         # IMPORTANDO COM ACTION DO VAULT
       - name: Import Secrets
-        id: import-secrets
+        id: import-secrets-5
         uses: hashicorp/vault-action@v2
         continue-on-error: true
         with:
