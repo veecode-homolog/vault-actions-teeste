@@ -12,14 +12,31 @@ jobs:
 
       - name: Import Secrets
         id: import-secrets
-        uses: hashicorp/vault-action@v2
-        continue-on-error: true
-        with:
-          url: ${{ secrets.VAULT_ADDR }}
-          token: ${{ secrets.VAULT_TOKEN }}
-          secrets: |
-              aws/data/ci/assumeRole accessKey | AWS_ACCESS_KEY_ID ;
-              aws/data/ci/assumeRole secretKey | AWS_SECRET_ACCESS_KEY ;    
+        # uses: hashicorp/vault-action@v2
+        # continue-on-error: true
+        # with:
+        #   url: ${{ secrets.VAULT_ADDR }}
+        #   token: ${{ secrets.VAULT_TOKEN }}
+        #   secrets: |
+        #       aws/data/ci/assumeRole accessKey | AWS_ACCESS_KEY_ID ;
+        #       aws/data/ci/assumeRole secretKey | AWS_SECRET_ACCESS_KEY ;    
+        env:
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+          VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+        run: |
+          echo "Fetching AWS credentials from Vault..."
+          response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
+            ${VAULT_ADDR}/v1/aws/creds/my-role)
+
+          echo "Parsing response..."
+          aws_access_key=$(echo $response | jq -r .data.access_key)
+          aws_secret_key=$(echo $response | jq -r .data.secret_key)
+          aws_session_token=$(echo $response | jq -r .data.security_token)
+
+          echo "Setting output variables..."
+          echo "::set-output name=AWS_ACCESS_KEY_ID::$aws_access_key"
+          echo "::set-output name=AWS_SECRET_ACCESS_KEY::$aws_secret_key"
+          echo "::set-output name=aws_session_token::$aws_session_token"
 
       - name: Import Secrets
         id: import-secrets-2
