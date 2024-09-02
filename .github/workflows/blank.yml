@@ -69,7 +69,7 @@ jobs:
           curl --header "X-Vault-Token: $VAULT_TOKEN" \
             --request POST \
             --data "{\"data\": {\"username\": \"$DB_USERNAME\", \"password\": \"$DB_PASSWORD\"}}" \
-            $VAULT_ADDR/v1/database/vault-action-teste/creds
+            $VAULT_ADDR/v1/database/data/vault-action-teste
 
         # IMPORTANDO COM ACTION DO VAULT
       - name: Import Secrets
