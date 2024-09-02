@@ -51,7 +51,7 @@ jobs:
         run: |
           echo "Fetching database credentials from Vault..."
           response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
-            ${VAULT_ADDR}/v1/postgres/creds/readWrite)
+            $VAULT_ADDR/v1/postgres/creds/readWrite)
 
           echo "Parsing response..."
           db_username=$(echo $response | jq -r .data.username)
@@ -60,7 +60,7 @@ jobs:
           echo "Setting output variables..."
           echo "::set-output name=db_username::$db_username"
           echo "::set-output name=db_password::$db_password"
-          
+
           echo "DB_USERNAME=${{ steps.db_creds.outputs.db_username }}" >> $GITHUB_ENV
           echo "DB_PASSWORD=${{ steps.db_creds.outputs.db_password }}" >> $GITHUB_ENV          
 
