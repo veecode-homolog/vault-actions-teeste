@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "Fetching AWS credentials from Vault..."
           response=$(curl --silent --header "X-Vault-Token: $VAULT_TOKEN" \
-            ${VAULT_ADDR}/v1/aws/creds/my-role)
+            ${VAULT_ADDR}/v1/aws/creds/assumeRole)
 
           echo "Parsing response..."
           aws_access_key=$(echo $response | jq -r .data.access_key)
