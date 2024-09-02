@@ -60,6 +60,9 @@ jobs:
           echo "Setting output variables..."
           echo "::set-output name=db_username::$db_username"
           echo "::set-output name=db_password::$db_password"
+          
+          echo "DB_USERNAME=${{ steps.db_creds.outputs.db_username }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ steps.db_creds.outputs.db_password }}" >> $GITHUB_ENV          
 
       - name: Use Database credentials
         continue-on-error: true
@@ -67,7 +70,7 @@ jobs:
           DB_USERNAME: ${{ steps.db_creds.outputs.db_username }}
           DB_PASSWORD: ${{ steps.db_creds.outputs.db_password }}
         run: |
-          PGPASSWORD=$DB_PASSWORD psql -h <db_host> -U $DB_USERNAME -d <db_name> -c '\dt'          
+          PGPASSWORD=$DB_PASSWORD psql -h rds-vault-teste.cpzxdcn9a81i.us-east-1.rds.amazonaws.com -U $DB_USERNAME -d postgres -c '\dt'          
 
       - name: Run a multi-line script
         continue-on-error: true
