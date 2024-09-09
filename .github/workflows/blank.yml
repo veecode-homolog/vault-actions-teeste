@@ -13,11 +13,11 @@ jobs:
       - name: Import AWSSecrets
         uses: hashicorp/vault-action@v2
         with:
-          url: https://vault.apr.vee.codes/
+          url: https://vault.apr.vee.codes
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-              secret/data/ci/aws accessKey | AWS_ACCESS_KEY_ID ;
-              secret/data/ci/aws secretKey | AWS_SECRET_ACCESS_KEY ;
+              aws/data/ci/aws accessKey | AWS_ACCESS_KEY_ID ;
+              aws/data/ci/aws secretKey | AWS_SECRET_ACCESS_KEY ;
 
       #   # USANDO JOB COM CURL
       # - name: Import AWS Secrets 
