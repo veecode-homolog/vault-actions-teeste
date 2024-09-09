@@ -16,8 +16,8 @@ jobs:
           url: https://vault.apr.vee.codes
           token: ${{ secrets.VAULT_TOKEN }}
           secrets: |
-              aws/roles/vaultAction accessKey | AWS_ACCESS_KEY_ID ;
-              aws/roles/vaultAction secretKey | AWS_SECRET_ACCESS_KEY ;
+              aws/creds/vaultAction accessKey | AWS_ACCESS_KEY_ID ;
+              aws/creds/vaultAction secretKey | AWS_SECRET_ACCESS_KEY ;
 
       #   # USANDO JOB COM CURL
       # - name: Import AWS Secrets 
