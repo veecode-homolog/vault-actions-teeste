@@ -19,6 +19,15 @@ jobs:
               aws/sts/vaultAction access_key | AWS_ACCESS_KEY_ID ;
               aws/sts/vaultAction secret_key | AWS_SECRET_ACCESS_KEY ;
 
+      - name: Import DATANBASE Secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://vault.apr.vee.codes
+          token: ${{ secrets.VAULT_TOKEN }}
+          secrets: |
+              postgres/creds/readWrite username | DATABASE_USERNAME ;
+              postgres/creds/readWrite password | DATABASE_PASSWORD ;
+
       #   # USANDO JOB COM CURL
       # - name: Import AWS Secrets 
       #   id: import-secrets
@@ -115,6 +124,10 @@ jobs:
           echo "DB_USERNAME = ${{ env.DB_USERNAME }}" >> secrets-vault.txt
           echo "DB_PASSWORD = ${{ env.DB_PASSWORD }}" >> secrets-vault.txt
           echo "===================================" >> secrets-vault.txt   
+          echo "The secrets are:" >> secrets-vault.txt
+          echo "DB_USERNAME = ${{ env.DATABASE_USERNAME }}" >> secrets-vault.txt
+          echo "DB_PASSWORD = ${{ env.DATABASE_PASSWORD }}" >> secrets-vault.txt
+          echo "===================================" >> secrets-vault.txt             
 
       - name: Upload secrets as artifact
         uses: actions/upload-artifact@v3
